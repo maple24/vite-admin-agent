@@ -1,0 +1,15 @@
+kafka:
+  servers:
+#    - 10.173.251.55:9092
+    - 10.173.248.175:9094
+#    - localhost:9092
+  group: xts
+
+platform:
+#  ip: 10.173.251.55
+  ip: 10.173.248.175
+  port: 8000
+
+local:
+  # root: C:\RobotTest\workspace\bat_rf
+  root: C:\Users\ZIU7WX\Desktop\platform\platform-agent\test

@@ -7,7 +7,7 @@ kafka:
 
 platform:
 #  ip: 10.173.251.55
-  ip: 10.173.248.175
+  ip: localhost
   port: 8000
 
 local:

@@ -4,7 +4,7 @@ from queue import Queue
 import websocket
 from loguru import logger
 
-websocket.enableTrace(True)
+websocket.enableTrace(False)
 
 
 class WebSocketClient(threading.Thread):
@@ -15,15 +15,12 @@ class WebSocketClient(threading.Thread):
         self._reconnect_count = 0
         self._MAX_RECONNECT_LIMIT = 100
         self._forever = True
-        # self.ws = None
-        # self.send_thread = threading.Thread(target=self.send_loop, daemon=True)
-        # self.send_thread.start()
 
     def connect(self):
         self.ws = websocket.WebSocketApp(self.server, on_message=self.on_message, on_open=self.on_open,
                                          on_close=self.on_close, on_error=self.on_error, on_ping=self.on_ping,
                                          on_pong=self.on_pong)
-        self.ws.run_forever() 
+        self.ws.run_forever()
 
     def send(self, message):
         self.ws.send(message)
@@ -37,10 +34,13 @@ class WebSocketClient(threading.Thread):
         self.ws.close()
 
     def on_message(self, client, message):
-        logger.info('WebSocket receive message:' + message)
+        # logger.info('WebSocket receive message:' + message) # avoid infinite message loop
+        pass
 
     def on_open(self, client):
-        logger.info("WebSocket open.")
+        logger.success("WebSocket open.")
+        # start thread to send logs to websocket
+        threading.Thread(target=self.send_loop, daemon=True).start()
         self._reconnect_count = 0
 
     def on_close(self, client, close_status_code, close_msg):

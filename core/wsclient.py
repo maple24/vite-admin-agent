@@ -1,8 +1,11 @@
 import threading
 from queue import Queue
-# from core.config import cfg
 import websocket
 from loguru import logger
+import json
+from lib.utils import run_command
+from lib.utils import get_host_name
+
 
 websocket.enableTrace(False)
 
@@ -34,8 +37,22 @@ class WebSocketClient(threading.Thread):
         self.ws.close()
 
     def on_message(self, client, message):
-        # logger.info('WebSocket receive message:' + message) # avoid infinite message loop
-        pass
+        # avoid infinite message loop
+        message = json.loads(message).get("message")
+        if isinstance(message, dict):
+            if message.get("command") and message.get("hostname") == get_host_name():
+                try:
+                    res = run_command(cmd=message.get("command"), input=message.get("input"))
+                except Exception as e:
+                    logger.debug(e)
+                data = {
+                    "purpose": "terminal",
+                    "message": {
+                        "hostname": message.get("hostname"),
+                        "output": res
+                    }
+                }
+                self.send(json.dumps(data))
 
     def on_open(self, client):
         logger.success("WebSocket open.")
@@ -56,7 +73,6 @@ class WebSocketClient(threading.Thread):
         logger.debug("####### on_pong #######")
 
     def on_error(self, client, error):
-        logger.error("Websocket connection error!")
         error_list = [ConnectionResetError, ConnectionRefusedError, websocket._exceptions.WebSocketConnectionClosedException]
         if type(error) in error_list:
             if self._forever:
@@ -70,15 +86,12 @@ class WebSocketClient(threading.Thread):
                 self.close()
                 self.connect()
         else:
-            logger.error("Unexpected error, close connection!")
+            logger.error("Unexpected error >>"+ error)
 
 
 if __name__ == '__main__':
-    # ws = websocket.WebSocketApp('ws://localhost:8765/', on_message=on_message, on_open=on_open, on_close=on_close)
-    # ws.run_forever()
     endpoint = "ws://localhost:8000/api/ws/log/"
     ws = WebSocketClient(server=endpoint, queue=Queue())
-    # ws.connect()
     ws.start()
     print('ss')
     logger.debug("closing connection")

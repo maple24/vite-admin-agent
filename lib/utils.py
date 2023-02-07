@@ -3,8 +3,15 @@ import subprocess
 
 
 def get_ip():
-    hostname = get_host_name()
-    return socket.gethostbyname(hostname)
+    st = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        st.connect(('10.255.255.255', 1))
+        res = st.getsockname()[0]
+    except Exception:
+        res = '127.0.0.1'
+    finally:
+        st.close()
+    return res
 
 def get_host_name():
     return socket.gethostname()
@@ -20,14 +27,5 @@ def run_command(cmd: str, input: str=None):
 
 
 if __name__ == '__main__':
-    # print(get_ip())
-    # print(get_host_name())
-    res = run_command(cmd="date")
-    data = {
-        "purpose": "cmd",
-        "message": res
-    }
-    import json
-    print(type(res))
-    print(type(data))
-    print(json.dumps(data))
+    print(get_ip())
+    print(get_host_name())

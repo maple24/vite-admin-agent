@@ -131,5 +131,7 @@ http_api = HttpRequest()
 
 if __name__ == '__main__':
     # r = HttpRequest()
-    # http_api.heartbeat()
+    data = {"ip": "172.21.160.1", "hostname": "SZH-C-0075C"}
+    res = http_api.register(ip=data.get("ip"), hostname=data.get("hostname"))
+    print(res)
     pass

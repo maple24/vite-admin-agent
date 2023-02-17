@@ -7,32 +7,35 @@ from loguru import logger
 from core.wsclient import WebSocketClient
 from core.config import cfg
 from core.executor import Executor
-# from core.consumer import Consumer
-# from core.handler import HandlerManager
-from core.log import AgentLogger
-# from core.task import TaskManager
+from core.consumer import MessageConsumer
+from core.handler import HandlerManager
+from core.log import LoggerManager
 logger.add(os.path.abspath('log\\agent.log'), rotation="12:00", level='DEBUG')
 
 
 class Agent:
     def __init__(self):
-        self.ws_queue = Queue()
-        logger.add(AgentLogger(self.ws_queue).remote_handler, level="INFO") # send log to websocket channel
-        self.ws = WebSocketClient(cfg.get_log_ws_url(), self.ws_queue)
-        self.executor = Executor()
-#         self.topics = [self.executor.host]  # use hostname as the consumer topic
-#         self.handler = HandlerManager()
-#         self.consumer = Consumer(self.topics, self.handler.dispatch)
+        self.ws_queue = Queue() # log queue
+        self.ws = WebSocketClient(cfg.get_log_ws_url(), self.ws_queue) # websockets
+        self.executor = Executor() # agent executor
+        self.hostname = self.executor.hostname
+        self.handler = HandlerManager() # handler to dispatch tasks
+        self.consumer = MessageConsumer(
+            topic=[self.hostname], 
+            group_id=self.hostname, 
+            callback=self.handler.dispatch) # consume kafka messages
+        logger.add(LoggerManager(self.ws_queue).remote_logger, level="INFO") # add logger to log queue
 
     def run(self):
         self.start_wsclient()
-#         self.start_consumer()
+        self.start_consumer()
         self.start_executor()
+        self.wait_consumer()
         self.wait_executor()
-#         self.wait_consumer()
 
-#     def start_consumer(self):
-#         self.consumer.start()
+    def start_consumer(self):
+        self.consumer.setDaemon(True)
+        self.consumer.start()
 
     def start_wsclient(self):
         self.ws.start()
@@ -40,19 +43,14 @@ class Agent:
     def start_executor(self):
         self.executor.start()
 
-#     def wait_consumer(self):
-#         self.consumer.join()
+    def wait_consumer(self):
+        self.consumer.join()
 
     def wait_executor(self):
         self.executor.join()
     
     def close_wsclient(self):
         self.ws.close()
-
-    def _init_log(self):
-        # TaskManager.queue = self.ws_queue
-        # TaskManager.ws = self.ws
-        pass
 
 
 # allow single process for agent

@@ -4,13 +4,13 @@ import os
 
 
 class Console:
-    def __init__(self, task):
-        self.title = task.get_title()
+    def __init__(self, title=None):
         self.process = None
+        self.title = title
 
     def start(self):
         console_path = r'plugin\console.exe'
-        cmd = f"{console_path} {self.title}"
+        cmd = f"{console_path} {self.title}" if self.title else console_path
         if not os.path.exists(console_path):
             logger.warning(f'{console_path} not exists.')
             return
@@ -25,6 +25,6 @@ class Console:
             return
         try:
             self.process.stdin.write(line)
-            self.process.flush()
-        except:
-            pass
+            self.process.stdin.flush()
+        except Exception as e:
+            logger.exception(e)

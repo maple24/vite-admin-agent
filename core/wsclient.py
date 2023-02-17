@@ -1,3 +1,6 @@
+'''
+create websockets client
+'''
 import threading
 from queue import Queue
 import websocket

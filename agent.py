@@ -1,8 +1,8 @@
+import portalocker
 import os
 from queue import Queue
-
-import portalocker
 from loguru import logger
+logger.add(os.path.abspath('log\\agent.log'), rotation="12:00", level='DEBUG')
 
 from core.wsclient import WebSocketClient
 from core.config import cfg
@@ -10,13 +10,13 @@ from core.executor import Executor
 from core.consumer import MessageConsumer
 from core.handler import HandlerManager
 from core.log import LoggerManager
-logger.add(os.path.abspath('log\\agent.log'), rotation="12:00", level='DEBUG')
 
 
 class Agent:
     def __init__(self):
         self.ws_queue = Queue() # log queue
-        self.ws = WebSocketClient(cfg.get_log_ws_url(), self.ws_queue) # websockets
+        logger.add(LoggerManager(self.ws_queue).remote_logger, level="TRACE") # add logger to log queue
+        self.ws = WebSocketClient(cfg.get_log_ws_url(), self.ws_queue) # send log to websockets
         self.executor = Executor() # agent executor
         self.hostname = self.executor.hostname
         self.handler = HandlerManager() # handler to dispatch tasks
@@ -24,7 +24,6 @@ class Agent:
             topic=[self.hostname], 
             group_id=self.hostname, 
             callback=self.handler.dispatch) # consume kafka messages
-        logger.add(LoggerManager(self.ws_queue).remote_logger, level="INFO") # add logger to log queue
 
     def run(self):
         self.start_wsclient()

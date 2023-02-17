@@ -6,8 +6,8 @@ from queue import Queue
 import websocket
 from loguru import logger
 import json
-from lib.utils import run_command
-from lib.utils import get_host_name
+from lib.utils import run_command, get_host_name
+from lib.message import LogMessage
 
 
 websocket.enableTrace(False)
@@ -40,22 +40,16 @@ class WebSocketClient(threading.Thread):
         self.ws.close()
 
     def on_message(self, client, message):
-        # avoid infinite message loop
-        message = json.loads(message).get("message")
-        if isinstance(message, dict):
-            if message.get("command") and message.get("hostname") == get_host_name():
+        # to avoid infinite message loop, do not use logger
+        args = json.loads(message).get("args")
+        if isinstance(args, dict):
+            if args.get("command") and args.get("hostname") == get_host_name():
                 try:
-                    res = run_command(cmd=message.get("command"), input=message.get("input"))
+                    result = run_command(cmd=args.get("command"), input=args.get("input"))
                 except Exception as e:
                     logger.debug(e)
-                data = {
-                    "purpose": "terminal",
-                    "message": {
-                        "hostname": message.get("hostname"),
-                        "output": res
-                    }
-                }
-                self.send(json.dumps(data))
+                data = LogMessage.output(hostname=args.get("hostname"), output=result)
+                self.send(json.dumps(data)) # also can use logger here, depends on whether you want it to show in the local terminal
 
     def on_open(self, client):
         logger.success("WebSocket open.")
@@ -89,7 +83,7 @@ class WebSocketClient(threading.Thread):
                 self.close()
                 self.connect()
         else:
-            logger.error("Unexpected error >>"+ error)
+            logger.error("Unexpected error >>" + error)
 
 
 if __name__ == '__main__':

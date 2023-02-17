@@ -22,7 +22,7 @@ class HandlerManager:
             handler = self.handler_map[key]
             logger.info(f"Received new task, type: {key}, params: {value}, handler: {handler}")
             try:
-                self.threadpool.submit(handler, value) # if something goes wrong inside the pool, no exception will be raised. Hard to debug here!
+                self.threadpool.submit(handler, value) # if something goes wrong inside the pool, no exception will be raised. so it is hard to debug here!
             except Exception as e:
                 logger.exception(e)
         else:

@@ -12,6 +12,7 @@ from lib.decorators import Singleton
 from .config import cfg
 from .console import Console
 import datetime
+from lib.message import LogMessage
 
 
 class TaskStatus:
@@ -26,7 +27,7 @@ class TaskStatus:
     CANCELED = 'Canceled'
     SCHEDULED = 'Scheduled'
     
-
+    
 class Task:
     def __init__(self, task_id, target=None, script=None, params=None):
         self.task_id = task_id
@@ -36,10 +37,8 @@ class Task:
         self.script = script
         # TODO: target is not necessary
         self.target = target
-        # upload log using kafka?
-        self.log_upload = threading.Event()
         self.console = None
-
+        
     @property
     def title(self):
         return f'{self.task_id}_{self.script}'
@@ -56,7 +55,6 @@ class Task:
     def run(self, console: bool=False):
         '''
         run task and wait it done
-        TODO: log
         '''
         cmd = self.script + ' ' + self.params
         logger.info(f'start cmd: {cmd}')
@@ -64,14 +62,19 @@ class Task:
         self.process = subprocess.Popen(cmd.split(' '), stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
         out = self.process.stdout
         if console: # output to console line by line
-            self.init_console()
+            self.init_console(title=f"TASK:{self.task_id}")
             while True:
                 line = out.readline().decode('utf-8')
                 if not line: break
                 self.console.write(line)
+                logger.trace({
+                    "task_id": self.task_id,
+                    "content": line 
+                })
             # self.console.exit()
         else:
-            logger.info(out.readlines())
+            for o in out.readlines():
+                logger.info(o.decode())
 
     def terminate(self):
         '''
@@ -88,7 +91,7 @@ class Task:
         logger.debug(f'Terminate task: {self.task_id} finished.')        
 
     def init_console(self, title=None):
-        self.console = Console(title=f"TASK:{self.task_id}")
+        self.console = Console(title)
         self.console.start()
     
     @staticmethod
@@ -142,7 +145,7 @@ class TaskManager:
         return self.container.get(task_id)
     
     def start_task(self, args: dict, console=True):
-        logger.info(f"Start task: {args}")
+        logger.success(f"Start task: {args}")
         task = self._init_task(args)
         Task.report_start_time(task.task_id)
         task.status = TaskStatus.RUNNING
@@ -158,6 +161,7 @@ class TaskManager:
         finally:
             self._remove_task(task.task_id)
             Task.report_end_time(task.task_id)
+            logger.success(f"Task {task.task_id} completed!")
     
     def stop_task(self, args: dict):
         logger.warning(f'Stop task: {args}')

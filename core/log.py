@@ -19,15 +19,11 @@ class LoggerManager:
         ast.literal_eval: parese message, convert string dictionary to dictionary
         task logs have task id
         '''
-        raw = message.record.get("message")
-        try:
-            raw = ast.literal_eval(raw)
+        data = LogMessage.trace(hostname=self.hostname, content=message.strip())
+        try: # if message is not able to convert to dict, send it directly
+            raw = ast.literal_eval(message.record.get("message"))
+            if isinstance(raw, dict) and raw.get("task_id"): 
+                data = LogMessage.trace(task_id=raw.get("task_id"), content=raw.get("content").strip())
         except:
             pass
-        if isinstance(raw, dict): 
-            task_id = raw.get("task_id")
-            content = raw.get("content")
-            data = LogMessage.trace(task_id=task_id, content=content.strip())
-        else:
-            data = LogMessage.trace(hostname=self.hostname, content=message.strip())
         self.queue.put(json.dumps(data))

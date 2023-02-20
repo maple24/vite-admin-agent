@@ -56,7 +56,7 @@ class Task:
         '''
         run task and wait it done
         '''
-        cmd = self.script + ' ' + self.params
+        cmd = self.script + ' ' + self.params if self.params else self.script
         logger.info(f'start cmd: {cmd}')
         # error also displays in outpipe
         self.process = subprocess.Popen(cmd.split(' '), stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
@@ -100,11 +100,11 @@ class Task:
     
     @staticmethod
     def report_end_time(task_id):
-        http_api.update_task(task_id=task_id, end_time=datetime.datetime.now())
+        http_api.update_task(task_id=task_id, end_time=datetime.datetime.now().replace(microsecond=0))
 
     @staticmethod
     def report_start_time(task_id):
-        http_api.update_task(task_id=task_id, start_time=datetime.datetime.now())
+        http_api.update_task(task_id=task_id, start_time=datetime.datetime.now().replace(microsecond=0))
     
 
 @Singleton
@@ -161,7 +161,6 @@ class TaskManager:
         finally:
             self._remove_task(task.task_id)
             Task.report_end_time(task.task_id)
-            logger.success(f"Task {task.task_id} completed!")
     
     def stop_task(self, args: dict):
         logger.warning(f'Stop task: {args}')

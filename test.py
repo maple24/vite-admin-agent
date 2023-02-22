@@ -12,11 +12,16 @@
 # consumer._fetch()
 # print("done")
 
-from core.task import TaskManager
-task1 = {
-    'task_id': 1,
-    'script': 'run.bat',
-    'target': '',
-    'params': ''
-}
-print(TaskManager.start_task(task1))
+# from core.task import TaskManager
+# task1 = {
+#     'task_id': 1,
+#     'script': 'run.bat',
+#     'target': '',
+#     'params': ''
+# }
+# print(TaskManager.start_task(task1))
+
+from core.executor import Executor
+
+executor = Executor()
+executor.start()

@@ -20,6 +20,30 @@ def get_host_name():
 def get_username():
     return os.getlogin()
 
+def list_files(folder, ext=None):
+    '''
+    list files in a folder with same extension, eg: list_files('.', '.log')
+    '''
+    files = []
+    path = os.path.abspath(folder)
+    dir_list = os.listdir(path)
+    for file in dir_list:
+        if not ext:
+            files.append(
+                {
+                    "name": file,
+                    'full_path': os.path.join(path, file)
+                }
+            )
+        elif os.path.splitext(file)[1] == ext:
+            files.append(
+                {
+                    "name": file,
+                    'full_path': os.path.join(path, file)
+                }
+            )
+    return files
+
 def run_command(cmd: str, input: str=None):
     p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     if input: input = input.encode()
@@ -31,5 +55,6 @@ def run_command(cmd: str, input: str=None):
 
 
 if __name__ == '__main__':
-    print(get_ip())
-    print(get_host_name())
+    # print(get_ip())
+    # print(get_host_name())
+    print(list_files("."))

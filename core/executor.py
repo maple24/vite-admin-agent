@@ -25,22 +25,22 @@ class Executor:
         self.scripts = []  # available scripts
         self._register()
         self.heartbeat_thread = threading.Thread(target=self.heartbeat)
-        # self.scan_scripts_thread = threading.Thread(target=self.scan_scripts)
+        self.scan_scripts_thread = threading.Thread(target=self.scan_scripts)
 
     def start(self):
-        # self.scan_scripts_thread.start()
+        self.scan_scripts_thread.start()
         self.heartbeat_thread.start()
 
     def join(self):
-        # self.scan_scripts_thread.join()
+        self.scan_scripts_thread.join()
         self.heartbeat_thread.join()
 
     def scan_scripts(self):
         while True:
-            bats = utils.list_files(self.root, '.bat')
-            if self._check_updated(bats):
-                logger.info("Scripts update! Trigger register method to report to platform.")
-                self.bats = bats
+            scripts = utils.list_files(self.root, '.bat')
+            if self.scripts != scripts:
+                logger.info("Scripts update!")
+                self.scripts = scripts
                 self._register()
             time.sleep(5)
 
@@ -53,26 +53,12 @@ class Executor:
             )
             time.sleep(5)
 
-    def _check_updated(self, bats):
-        flag = False
-        old = self.bats
-        new = bats
-        for bat in new:
-            if bat not in old:
-                logger.info(f"Script found: {bat['name']}")
-                flag = True
-        for bat in old:
-            if bat not in new:
-                logger.info(f"Script deleted: {bat['name']}")
-                flag = True
-        return flag
-
     def _register(self):
         while True:
             if http_api.register(
                 ip=self.ip,
                 hostname=self.hostname,
-                script=self.scripts
+                scripts=self.scripts
             ): break
             time.sleep(3) # reconnect every 3s
 

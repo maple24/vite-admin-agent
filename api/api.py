@@ -131,10 +131,7 @@ class HttpRequest:
         try:
             res = self.patch(url, data=kwargs)
             if res:
-                logger.debug(f"Update task `{task_id}` with args `{kwargs}` success. {str(res)}")
-                return True
-            else:
-                logger.error(f"Update task `{task_id}` with args `{kwargs}` fail. {str(res)}")
+                logger.success("Update task successfully.")
         except Exception as e:
             logger.exception(e)
 

@@ -38,6 +38,7 @@ class Task:
         # TODO: target is not necessary
         self.target = target
         self.console = None
+        self.reason = None
         
     @property
     def title(self):
@@ -80,14 +81,10 @@ class Task:
         '''
         terminate process and its child process
         '''
-        try:
-            children = psutil.Process(self.process.pid).children()
-        except psutil.NoSuchProcess:
-            logger.debug(f"PID {self.process.pid} not exist.")
-            return
-        for child in children:
-            logger.debug(f"Terminate task: {self.task_id} pid: {child.pid}")
-            os.popen('taskkill.exe /f /pid:' + str(child.pid))
+        parent = psutil.Process(self.process.pid)
+        for child in parent.children(recursive=True):
+            child.kill()
+        parent.kill()
         logger.debug(f'Terminate task: {self.task_id} finished.')        
 
     def init_console(self, title=None):
@@ -99,8 +96,8 @@ class Task:
         http_api.update_task(task_id=task_id, status=status)
     
     @staticmethod
-    def report_end_time(task_id):
-        http_api.update_task(task_id=task_id, end_time=datetime.datetime.now().replace(microsecond=0), schedule_id=None)
+    def report_end_time(task_id, reason):
+        http_api.update_task(task_id=task_id, end_time=datetime.datetime.now().replace(microsecond=0), schedule_id=None, reason=reason)
 
     @staticmethod
     def report_start_time(task_id):
@@ -127,6 +124,7 @@ class TaskManager:
         if not os.path.exists(script):
             logger.warning(f"{script} not exist.")
             task.status = TaskStatus.ERROR
+            Task.report_end_time(task.task_id, f"{script} not exist!")
             return
         cls._add_task(task_id, task)
         task.status = TaskStatus.STARTING
@@ -164,11 +162,12 @@ class TaskManager:
             logger.debug("Task completed!")
         except Exception as e:
             logger.debug("Error occured when running task!")
+            task.reason = "Error occured when running task!"
             task.status = TaskStatus.ERROR
             logger.exception(e)
         finally:
             cls._remove_task(task.task_id)
-            Task.report_end_time(task.task_id)
+            Task.report_end_time(task.task_id, task.reason)
     
     @classmethod
     def stop_task(cls, args: dict):
@@ -177,18 +176,21 @@ class TaskManager:
         if task_id not in cls.container:
             logger.warning(f"Task {task_id} not in processing. Skip!")
             Task.report_status(task_id, TaskStatus.TERMINATED)
-            Task.report_end_time(task_id)
+            Task.report_end_time(task_id, "Task not exist in container!")
             return
         task = cls._fetch_task(task_id)
         try:
             task.terminate()
             logger.debug("Task terminated!")
             task.status = TaskStatus.TERMINATED
-            Task.report_end_time(task_id)
+            task.reason = "Force terminated by user."
         except Exception as e:
+            task.status = TaskStatus.ERROR
+            task.reason = "Terminate task error!"
             logger.exception(e)
         finally:
             cls._remove_task(task_id)
+            Task.report_end_time(task_id, task.reason)
         
 
 if __name__ == '__main__':

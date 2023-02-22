@@ -9,14 +9,15 @@ import json
 import threading
 from core.config import cfg
 from loguru import logger
+from lib.decorators import Singleton
 
 
+@Singleton
 class MessageConsumer(threading.Thread):
-    broker = cfg.get('kafka').get('servers')
-    consumer = None
-    
+
     def __init__(self, topic: list, group_id: str=None, callback=None, client_id='', auto_offset_reset='earliest'):
         super().__init__()
+        self.broker = cfg.get('kafka').get('servers')
         self.topic = topic
         self.callback = callback
         self.group_id = group_id

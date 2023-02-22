@@ -7,34 +7,33 @@ from concurrent.futures import ThreadPoolExecutor
 from .task import TaskManager
 
 
-@Singleton
 class HandlerManager:
+    pool = ThreadPoolExecutor()
     
     def __init__(self) -> None:
         self.handler_map = {
             'task': self.task_handler,
         }
-        self.threadpool = ThreadPoolExecutor()
-        self.taskManager = TaskManager()
     
     def dispatch(self, key, value):
         if key in self.handler_map:
             handler = self.handler_map[key]
             logger.info(f"Received new task, type: {key}, params: {value}, handler: {handler}")
             try:
-                self.threadpool.submit(handler, value) # if something goes wrong inside the pool, no exception will be raised. so it is hard to debug here!
+                self.pool.submit(handler, value) # if something goes wrong inside the pool, no exception will be raised. so it is hard to debug here!
             except Exception as e:
                 logger.exception(e)
         else:
             logger.info(f"{key} not in handler map, discard!")
 
-    def task_handler(self, message):
+    @staticmethod
+    def task_handler(message):
         try:
             method = message['method']
             args = message['args']
-            if hasattr(self.taskManager, method):
+            if hasattr(TaskManager, method):
                 logger.debug(f"Task handler get message {method}")
-                func = getattr(self.taskManager, method)
+                func = getattr(TaskManager, method)
                 func(args)
             else:
                 logger.error(f'Method: {method} not exists. Skip!')

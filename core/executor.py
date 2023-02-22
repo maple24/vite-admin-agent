@@ -9,7 +9,7 @@ import threading
 import time
 from lib import utils
 from core.config import cfg
-# from core.task import TaskManager
+from core.task import TaskManager
 from loguru import logger
 from api.api import http_api
 from lib.decorators import Singleton
@@ -19,12 +19,12 @@ from lib.decorators import Singleton
 class Executor:
 
     def __init__(self):
+        self.root = cfg.get('local').get('root')  # data root of rf
         self.ip = utils.get_ip()  # ip of executor
         self.hostname = utils.get_host_name()
+        self.scripts = []  # available scripts
         self._register()
         self.heartbeat_thread = threading.Thread(target=self.heartbeat)
-        self.root = cfg.get('local').get('root')  # data root of rf
-        self.bats = []  # bats of rf
         # self.scan_scripts_thread = threading.Thread(target=self.scan_scripts)
 
     def start(self):
@@ -49,7 +49,7 @@ class Executor:
             http_api.heartbeat(
                 ip=self.ip,
                 hostname=self.hostname,
-                # task_list=TaskManager.all()
+                task_list=TaskManager.all()
             )
             time.sleep(5)
 
@@ -68,13 +68,12 @@ class Executor:
         return flag
 
     def _register(self):
-        _is_registered = False
-        while not _is_registered:
-            _is_registered = http_api.register(
+        while True:
+            if http_api.register(
                 ip=self.ip,
                 hostname=self.hostname,
-                # script=self.bats
-            )
+                script=self.scripts
+            ): break
             time.sleep(3) # reconnect every 3s
 
 

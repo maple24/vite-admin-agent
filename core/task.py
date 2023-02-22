@@ -66,7 +66,7 @@ class Task:
             while True:
                 line = out.readline().decode('utf-8')
                 if not line: break
-                self.console.write(line)
+                self.console.write(line) 
                 logger.trace({
                     "task_id": self.task_id,
                     "content": line 
@@ -100,53 +100,61 @@ class Task:
     
     @staticmethod
     def report_end_time(task_id):
-        http_api.update_task(task_id=task_id, end_time=datetime.datetime.now().replace(microsecond=0))
+        http_api.update_task(task_id=task_id, end_time=datetime.datetime.now().replace(microsecond=0), schedule_id=None)
 
     @staticmethod
     def report_start_time(task_id):
         http_api.update_task(task_id=task_id, start_time=datetime.datetime.now().replace(microsecond=0))
     
 
-@Singleton
+
 class TaskManager:
     
-    def __init__(self) -> None:
-        self.container = {}
-        self.ROOT = cfg.get('local').get('root')
+    container = {}
+    ROOT = cfg.get('local').get('root')
     
-    def _init_task(self, args: dict) -> Task:
+    @classmethod
+    def _init_task(cls, args: dict) -> Task:
         task_id=args.get("task_id")
-        if task_id in self.container:
+        if task_id in cls.container:
             logger.warning(f"Task {task_id} already in processing. Skip!")
             return
-        script = os.path.join(self.ROOT, args.get("script"))
+        script = os.path.join(cls.ROOT, args.get("script"))
         target = args.get("target")
         params = args.get("params")
         task = Task(task_id, target, script, params)
-        logger.debug("Task initiated!")
+        logger.success("Task initiated!")
         if not os.path.exists(script):
             logger.warning(f"{script} not exist.")
             task.status = TaskStatus.ERROR
             return
-        self._add_task(task_id, task)
+        cls._add_task(task_id, task)
         task.status = TaskStatus.STARTING
         return task
     
-    def _add_task(self, task_id, task):
-        self.container.setdefault(task_id, task)
+    @classmethod
+    def _add_task(cls, task_id, task):
+        cls.container.setdefault(task_id, task)
     
-    def _remove_task(self, task_id):
-        if task_id in self.container: self.container.pop(task_id)
+    @classmethod
+    def _remove_task(cls, task_id):
+        if task_id in cls.container: cls.container.pop(task_id)
     
-    def _fetch_task(self, task_id) -> Task:
+    @classmethod
+    def _fetch_task(cls, task_id) -> Task:
         '''
         specify type of output, vscode can auto-complete method of the instance
         '''
-        return self.container.get(task_id)
+        return cls.container.get(task_id)
+
+    @classmethod
+    def all(cls):
+        return list(cls.container.keys())
     
-    def start_task(self, args: dict, console=True):
+    @classmethod
+    def start_task(cls, args: dict, console=True):
         logger.success(f"Start task: {args}")
-        task = self._init_task(args)
+        task = cls._init_task(args)
         Task.report_start_time(task.task_id)
         task.status = TaskStatus.RUNNING
         logger.debug("Start running task!")
@@ -159,18 +167,19 @@ class TaskManager:
             task.status = TaskStatus.ERROR
             logger.exception(e)
         finally:
-            self._remove_task(task.task_id)
+            cls._remove_task(task.task_id)
             Task.report_end_time(task.task_id)
     
-    def stop_task(self, args: dict):
+    @classmethod
+    def stop_task(cls, args: dict):
         logger.warning(f'Stop task: {args}')
         task_id = args.get('task_id')
-        if task_id not in self.container:
+        if task_id not in cls.container:
             logger.warning(f"Task {task_id} not in processing. Skip!")
             Task.report_status(task_id, TaskStatus.TERMINATED)
             Task.report_end_time(task_id)
             return
-        task = self._fetch_task(task_id)
+        task = cls._fetch_task(task_id)
         try:
             task.terminate()
             logger.debug("Task terminated!")
@@ -179,7 +188,7 @@ class TaskManager:
         except Exception as e:
             logger.exception(e)
         finally:
-            self._remove_task(task_id)
+            cls._remove_task(task_id)
         
 
 if __name__ == '__main__':
@@ -189,6 +198,5 @@ if __name__ == '__main__':
         'target': '',
         'params': ''
     }
-    taskManager = TaskManager()
-    taskManager.start_task(task1)
+    TaskManager.start_task(task1)
     

@@ -1,5 +1,6 @@
 import portalocker
 import os
+import getpass
 from queue import Queue
 from loguru import logger
 logger.add(os.path.abspath('log\\agent.log'), rotation="12:00", level='DEBUG')
@@ -10,10 +11,13 @@ from core.executor import Executor
 from core.consumer import MessageConsumer
 from core.handler import HandlerManager
 from core.log import LoggerManager
+from lib.utils import get_username
+from api.api import http_api
 
 
 class Agent:
     def __init__(self):
+        if not self._login(): return
         self.ws_queue = Queue() # log queue
         logger.add(LoggerManager(self.ws_queue).remote_logger, level="TRACE") # add logger to log queue
         self.ws = WebSocketClient(cfg.get_log_ws_url(), self.ws_queue) # send log to websockets
@@ -24,6 +28,12 @@ class Agent:
             topic=[self.hostname], 
             group_id=self.hostname, 
             callback=self.handler.dispatch) # consume kafka messages
+    
+    @staticmethod
+    def _login():
+        password = getpass.getpass(prompt="Password:")
+        response = http_api.login(username=get_username(), password=password)
+        return response
 
     def run(self):
         self.start_wsclient()

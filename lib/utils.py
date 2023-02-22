@@ -1,5 +1,6 @@
 import socket
 import subprocess
+import os
 
 
 def get_ip():
@@ -15,6 +16,9 @@ def get_ip():
 
 def get_host_name():
     return socket.gethostname()
+
+def get_username():
+    return os.getlogin()
 
 def run_command(cmd: str, input: str=None):
     p = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)

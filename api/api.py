@@ -1,10 +1,10 @@
 import os
 import sys
+import requests
+import json
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-import json
 from requests.exceptions import ConnectionError
-import requests
 from loguru import logger
 from core.config import cfg
 
@@ -36,6 +36,7 @@ class HttpRequest:
             'register': '/api/v1/agent/executor/register/',
             'getTask': '/api/v1/agent/task/{0}',
             'updateTask': '/api/v1/agent/task/{0}/',
+            'login': '/api/v1/auth/login/'
         }
 
     @staticmethod
@@ -130,12 +131,21 @@ class HttpRequest:
         try:
             res = self.patch(url, data=kwargs)
             if res:
+                logger.debug(f"Update task `{task_id}` with args `{kwargs}` success. {str(res)}")
                 return True
             else:
                 logger.error(f"Update task `{task_id}` with args `{kwargs}` fail. {str(res)}")
         except Exception as e:
             logger.exception(e)
 
+    def login(self, **kwargs):
+        url = self._get_url('login')
+        try:
+            res = requests.post(url, data=json.dumps(kwargs), headers={"Content-Type": 'application/json'})
+            if res.status_code == 200:
+                return True
+        except Exception as e:
+            logger.exception(e)
 
 http_api = HttpRequest()
 
@@ -145,4 +155,5 @@ if __name__ == '__main__':
     # res = http_api.register(ip=data.get("ip"), hostname=data.get("hostname"))
     # print(res)
     # pass
-    print(r.patch(url=r._get_url('updateTask').format(1), data={'status': 'Completed'}))
+    # print(r.patch(url=r._get_url('updateTask').format(1), data={'status': 'Completed'}))
+    print(r.login(username="ziu7wx", password="zj#7829369041"))

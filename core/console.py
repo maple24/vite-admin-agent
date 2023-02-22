@@ -27,4 +27,5 @@ class Console:
             self.process.stdin.write(line)
             self.process.stdin.flush()
         except Exception as e:
-            logger.exception(e)
+            logger.error(e)
+            raise # stop process

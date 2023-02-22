@@ -19,5 +19,4 @@ task1 = {
     'target': '',
     'params': ''
 }
-taskManager = TaskManager()
-taskManager.start_task(task1)
+print(TaskManager.start_task(task1))

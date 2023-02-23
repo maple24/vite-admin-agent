@@ -32,8 +32,11 @@ class Agent:
     @staticmethod
     def _login():
         password = getpass.getpass(prompt="Password:")
-        response = http_api.login(username=get_username(), password=password)
-        return response
+        if http_api.login(username=get_username(), password=password): 
+            return True
+        else:
+            logger.error("Fail to login!")
+            raise
 
     def run(self):
         self.start_wsclient()

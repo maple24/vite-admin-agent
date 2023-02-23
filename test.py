@@ -21,7 +21,22 @@
 # }
 # print(TaskManager.start_task(task1))
 
-from core.executor import Executor
+# from core.consumer import MessageConsumer
 
-executor = Executor()
-executor.start()
+# consumer = MessageConsumer(topic="WX-C-001GN", group_id="WX-C-001GN")
+
+# consumer._poll()
+
+from datetime import datetime, timezone
+tz = datetime.now(timezone.utc).astimezone().tzinfo
+
+now = datetime.now()
+print("now: ", now)
+utc_now = datetime.utcnow()
+print("utcnow: ", utc_now)
+
+conv = datetime.utcfromtimestamp(now.timestamp())
+
+print("conv: ", conv)
+
+print("timestamp:", now.timestamp())

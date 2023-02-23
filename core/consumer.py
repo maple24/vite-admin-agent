@@ -29,6 +29,7 @@ class MessageConsumer(threading.Thread):
                             client_id = client_id, # agent hostname
                             api_version = (0, 10),
                         )
+        logger.info(f"Initiated consumer with {self.broker}")
         
     def run(self):
         self._subscribe(self.topic)

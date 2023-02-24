@@ -219,6 +219,7 @@ $RECYCLE.BIN/
 log/
 test/
 .VSCodeCounter/
+test*
 
 # End of https://www.toptal.com/developers/gitignore/api/windows,visualstudiocode,python
 

@@ -1,7 +1,7 @@
 kafka:
   servers:
   - 10.161.229.42:9092
-  # - 10.161.195.88:9092
+  # - localhost:9092
   group: xts
 
 platform:

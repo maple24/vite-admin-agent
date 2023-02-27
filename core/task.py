@@ -29,14 +29,12 @@ class TaskStatus:
     
     
 class Task:
-    def __init__(self, task_id, target=None, script=None, params=None):
+    def __init__(self, task_id, script=None, params=None):
         self.task_id = task_id
         self._status = TaskStatus.IDLING
         self.process = None
         self.params = params
         self.script = script
-        # TODO: target is not necessary
-        self.target = target
         self.console = None
         self.reason = None
         
@@ -117,9 +115,8 @@ class TaskManager:
             logger.warning(f"Task {task_id} already in processing. Skip!")
             return
         script = os.path.join(cls.ROOT, args.get("script"))
-        target = args.get("target")
         params = args.get("params")
-        task = Task(task_id, target, script, params)
+        task = Task(task_id, script, params)
         logger.success("Task initiated!")
         if not os.path.exists(script):
             logger.warning(f"{script} not exist.")
@@ -197,7 +194,6 @@ if __name__ == '__main__':
     task1 = {
         'task_id': 1,
         'script': 'run.bat',
-        'target': '',
         'params': ''
     }
     TaskManager.start_task(task1)

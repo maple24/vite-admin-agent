@@ -3,6 +3,7 @@ import os
 import getpass
 from queue import Queue
 from loguru import logger
+import subprocess
 logger.add(os.path.abspath('log\\agent.log'), rotation="12:00", level='DEBUG')
 
 from core.wsclient import WebSocketClient
@@ -17,6 +18,7 @@ from api.api import http_api
 
 class Agent:
     def __init__(self):
+        self._proxy()
         if not self._login(): return
         self.ws_queue = Queue() # log queue
         logger.add(LoggerManager(self.ws_queue).remote_logger, level="TRACE") # add logger to log queue
@@ -37,6 +39,14 @@ class Agent:
         else:
             logger.error("Fail to login!")
             raise
+    
+    @staticmethod
+    def _proxy():
+        try:
+            subprocess.Popen("python -m px", shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+            logger.info("Start proxy.")
+        except:
+            pass
 
     def run(self):
         self.start_wsclient()

@@ -33,6 +33,7 @@ class LogMessage:
     def trace(cls, **kwargs):
         return cls("log", kwargs).__dict__
 
+    @classmethod
     def output(cls, **kwargs):
         return cls("terminal", kwargs).__dict__
 

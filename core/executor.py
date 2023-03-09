@@ -49,9 +49,10 @@ class Executor:
             http_api.heartbeat(
                 ip=self.ip,
                 hostname=self.hostname,
-                task_list=TaskManager.all()
+                task_list=TaskManager.all(),
+                is_active=utils.is_active()
             )
-            time.sleep(5)
+            time.sleep(3)
 
     def _register(self):
         while True:

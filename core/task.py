@@ -63,8 +63,8 @@ class Task:
         if console: # output to console line by line
             self.init_console(title=f"TASK:{self.task_id}")
             while True:
+                if self.process.poll() is not None: break
                 line = out.readline().decode('utf-8')
-                if not line: break
                 self.console.write(line) 
                 logger.trace({
                     "task_id": self.task_id,
@@ -155,8 +155,10 @@ class TaskManager:
         logger.debug("Start running task!")
         try:
             task.run(console)
-            task.status = TaskStatus.COMPLETED
-            logger.debug("Task completed!")
+            if task.process.poll() == 0:
+                # 0 == normal exit; 15 == kill; None == child process is still running;
+                task.status = TaskStatus.COMPLETED
+                logger.debug("Task completed!")
         except Exception as e:
             logger.debug("Error occured when running task!")
             task.reason = "Error occured when running task!"

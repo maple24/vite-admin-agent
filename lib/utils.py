@@ -1,6 +1,7 @@
 import socket
 import subprocess
 import os
+import re
 
 
 def get_ip():
@@ -52,6 +53,15 @@ def run_command(cmd: str, input: str=None):
         return str(out.decode())
     if err:
         return str(err.decode())
+
+def is_active():
+    cmd = 'query user'
+    process = subprocess.Popen(cmd.split(' '), stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
+    out, _ = process.communicate()
+    if re.search('Active', out.decode()):
+        if not process.poll(): process.kill()
+        return True
+    return False
 
 
 if __name__ == '__main__':

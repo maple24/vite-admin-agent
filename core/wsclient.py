@@ -58,10 +58,14 @@ class WebSocketClient(threading.Thread):
         self._reconnect_count = 0
 
     def on_close(self, client, close_status_code, close_msg):
+        # reconnect
         if close_status_code or close_msg:
             logger.info("close status code: " + str(close_status_code))
             logger.info("close message: " + str(close_msg))
         logger.info(f"WebSocket closed.{client}")
+        if self._forever:
+            logger.info("WebSocket closed. Try reconnecting...")
+            self.connect()
 
     def on_ping(self, client, message):
         logger.debug("####### on_ping #######")

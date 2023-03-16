@@ -26,7 +26,8 @@ class WebSocketClient(threading.Thread):
         self.ws = websocket.WebSocketApp(self.server, on_message=self.on_message, on_open=self.on_open,
                                          on_close=self.on_close, on_error=self.on_error, on_ping=self.on_ping,
                                          on_pong=self.on_pong)
-        self.ws.run_forever()
+        logger.info("Create websocket connection.")
+        self.ws.run_forever(ping_interval=10, ping_timeout=5, ping_payload="This is a ping payload")
 
     def send(self, message):
         self.ws.send(message)
@@ -37,6 +38,7 @@ class WebSocketClient(threading.Thread):
             self.send(message)
 
     def close(self):
+        logger.info("Close websocket connection.")
         self.ws.close()
 
     def on_message(self, client, message):

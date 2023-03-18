@@ -76,7 +76,7 @@ class WebSocketClient(threading.Thread):
         logger.debug("####### on_pong #######")
 
     def on_error(self, client, error):
-        error_list = [ConnectionResetError, ConnectionRefusedError, websocket._exceptions.WebSocketConnectionClosedException]
+        error_list = [ConnectionResetError, ConnectionRefusedError, ConnectionAbortedError, websocket._exceptions.WebSocketConnectionClosedException]
         if type(error) in error_list:
             if self._forever:
                 logger.info(f"WebSocket connect error, try to reconnect.")
@@ -89,7 +89,7 @@ class WebSocketClient(threading.Thread):
                 self.close()
                 self.connect()
         else:
-            logger.error("Unexpected error >>" + error)
+            logger.error(error)
 
 
 if __name__ == '__main__':

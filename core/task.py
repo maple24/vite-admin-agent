@@ -95,7 +95,10 @@ class Task:
     
     @staticmethod
     def report_end_time(task_id, reason):
-        http_api.update_task(task_id=task_id, end_time=datetime.datetime.now().replace(microsecond=0), schedule_id=None, reason=reason)
+        if reason:
+            http_api.update_task(task_id=task_id, end_time=datetime.datetime.now().replace(microsecond=0), schedule_id=None, reason=reason)
+        else:
+            http_api.update_task(task_id=task_id, end_time=datetime.datetime.now().replace(microsecond=0), schedule_id=None)
 
     @staticmethod
     def report_start_time(task_id):

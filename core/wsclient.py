@@ -8,6 +8,7 @@ from loguru import logger
 import json
 from lib.utils import run_command, get_host_name
 from lib.message import LogMessage
+import time
 
 
 websocket.enableTrace(False)
@@ -81,12 +82,14 @@ class WebSocketClient(threading.Thread):
             if self._forever:
                 logger.info(f"WebSocket connect error, try to reconnect.")
                 self.close()
+                time.sleep(2)
                 self.connect()
             elif self._reconnect_count < self._MAX_RECONNECT_LIMIT:
                 logger.info(
                     f"WebSocket connect error, try to reconnect. {self._reconnect_count}/{self._MAX_RECONNECT_LIMIT}")
                 self._reconnect_count += 1
                 self.close()
+                time.sleep(2)
                 self.connect()
         else:
             logger.error(error)

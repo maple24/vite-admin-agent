@@ -1,7 +1,6 @@
 '''
 handler is a class of methods to dispatch message from kafka/websockets
 '''
-from lib.decorators import Singleton
 from loguru import logger
 from concurrent.futures import ThreadPoolExecutor
 from .task import TaskManager

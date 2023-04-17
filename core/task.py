@@ -3,16 +3,13 @@ Task: task object
 TaskManager: control task flow and report status to backend
 '''
 import subprocess
-import threading
 from api.api import http_api
 from loguru import logger
 import psutil
 import os
-from lib.decorators import Singleton
 from .config import cfg
 from .console import Console
 import datetime
-from lib.message import LogMessage
 
 
 class TaskStatus:

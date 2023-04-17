@@ -80,7 +80,7 @@ class WebSocketClient(threading.Thread):
         error_list = [ConnectionResetError, ConnectionRefusedError, ConnectionAbortedError, websocket._exceptions.WebSocketConnectionClosedException]
         if type(error) in error_list:
             if self._forever:
-                logger.info(f"WebSocket connect error, try to reconnect.")
+                logger.info("WebSocket connect error, try to reconnect.")
                 self.close()
                 time.sleep(2)
                 self.connect()

@@ -86,6 +86,14 @@ class Task:
         self.console = Console(title)
         self.console.start()
     
+    def info(self):
+        return {
+            'task_id': self.task_id,
+            'status': self.status,
+            'pid': self.process.pid,
+            'params': self.params,
+        }
+    
     @staticmethod
     def report_status(task_id, status):
         http_api.update_task(task_id=task_id, status=status)
@@ -144,7 +152,10 @@ class TaskManager:
 
     @classmethod
     def all(cls):
-        return list(cls.container.keys())
+        res = []
+        for task in cls.container.values():
+            res.append(task.info())
+        return res
     
     @classmethod
     def start_task(cls, args: dict, console=True):
